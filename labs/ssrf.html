@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03. SSRF 실습 · 웹 해킹 체험 실습실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> SSRF</div>
+    <a class="nav-back" href="../index.html">← 실습실로</a>
+  </div>
+
+  <div class="hero">
+    <span class="badge">실습 03 · 난이도 ★★★</span>
+    <h1>SSRF <span class="grad">서버를 심부름꾼으로</span></h1>
+    <p>"이미지 주소를 넣으면 미리보기를 보여주는" 기능 많죠? 이때 <b>서버가 대신 그 주소에 접속</b>해요.
+       공격자가 외부 주소 대신 <b>서버 내부 주소</b>를 넣으면, 바깥에선 못 보는 내부 비밀 정보를
+       서버가 대신 가져다 줍니다. 이게 SSRF예요.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-label">모의 사이트 · "URL 미리보기 서비스"</div>
+    <h2>🔗 이미지 URL 미리보기</h2>
+
+    <div class="mode-switch">
+      <button class="active vuln" data-mode="vuln">🔓 취약한 버전</button>
+      <button class="safe" data-mode="safe">🔒 방어된 버전</button>
+    </div>
+
+    <div class="state-banner vuln" data-mode-banner="vuln">
+      🔓 어떤 주소든 <b>서버가 그대로 접속</b>합니다. 내부 주소도요!
+    </div>
+    <div class="state-banner safe" data-mode-banner="safe" style="display:none">
+      🔒 내부 IP·메타데이터 주소를 <b>차단 목록으로 막습니다.</b>
+    </div>
+
+    <label for="ssrf-url">가져올 URL</label>
+    <input type="url" id="ssrf-url" placeholder="https://example.com/photo.jpg" value="https://cdn.example.com/cat.jpg">
+    <button class="btn" onclick="fetchUrl()">🖥️ 서버가 가져오기</button>
+
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="dots"><span style="background:#f87171"></span><span style="background:#fbbf24"></span><span style="background:#4ade80"></span></div>
+        <div class="url" id="server-url">server-internal-network</div>
+      </div>
+      <div class="browser-body output" id="ssrf-result" style="margin:0; border:none">
+        <span class="hint">서버가 가져온 응답이 여기 표시됩니다.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 공격 미션</h2>
+    <p>외부 주소 대신 <b>클라우드 서버의 비밀 정보 주소</b>를 넣어보세요.
+       (실제 AWS 서버의 내부 메타데이터 주소예요)</p>
+    <pre><code class="tok-attack">http://169.254.169.254/latest/meta-data/iam/security-credentials/</code></pre>
+    <p style="color:var(--muted)">또는 내부 관리자 페이지를 노려보세요:</p>
+    <pre><code class="tok-attack">http://localhost:8080/admin/secret</code></pre>
+    <div class="note warn">
+      <b>왜 위험할까?</b> <code class="inline">169.254.169.254</code> 는 클라우드 서버 안에서만 접근되는
+      특수 주소로, <b>서버의 로그인 열쇠(액세스 키)</b>가 들어있어요. 해커가 이걸 빼내면
+      회사의 클라우드 전체를 장악할 수도 있습니다. 실제 대형 유출 사고의 단골 원인이에요.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔍 무슨 차이일까?</h2>
+    <div class="section-label">🔓 취약한 코드</div>
+    <pre><code class="tok-com"># 사용자가 준 주소를 검증 없이 그대로 요청</code>
+response = requests.get(user_url)   <code class="tok-com"># 내부 주소든 뭐든 다 감</code>
+return response.text</pre>
+
+    <div class="section-label" style="margin-top:16px">🔒 방어된 코드</div>
+    <pre><code class="tok-com"># 내부망·메타데이터 주소를 막고, 허용 목록만 통과</code>
+host = urlparse(user_url).hostname
+<span class="tok-key">if</span> is_private_ip(host) <span class="tok-key">or</span> host == <span class="tok-str">"169.254.169.254"</span>:
+    <span class="tok-key">raise</span> Error(<span class="tok-str">"내부 주소 접근 금지"</span>)
+<span class="tok-key">if</span> host <span class="tok-key">not in</span> ALLOWED_DOMAINS:
+    <span class="tok-key">raise</span> Error(<span class="tok-str">"허용되지 않은 도메인"</span>)</pre>
+
+    <div class="note success">
+      <b>핵심 방어법</b><br>
+      ① 사설 IP 대역(10.x, 192.168.x, 127.x, 169.254.x) <b>차단</b><br>
+      ② <b>허용 목록(allowlist)</b> 방식 — 믿을 수 있는 도메인만 통과<br>
+      ③ 클라우드 메타데이터는 <b>IMDSv2</b>(토큰 필요)로 전환
+    </div>
+  </div>
+
+  <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
+    <h2>🏁 플래그 획득!</h2>
+    <p>서버를 속여 내부 비밀 자격 증명을 빼냈습니다!</p>
+    <p><span class="flag">FLAG{55rf_m3tadata_1s_m1ne}</span></p>
+  </div>
+
+  <footer>실습 03 / 04 · <a href="csrf.html">다음: CSRF →</a></footer>
+</div>
+
+<script src="../assets/common.js"></script>
+<script>
+// 모의 네트워크: 서버가 접근 가능한 "가상 사이트들"
+const MOCK_NET = {
+  "169.254.169.254": {
+    label: "AWS 내부 메타데이터 서버 🔒",
+    body: `AccessKeyId: AKIA4FAKE7EXAMPLE9Z9
+SecretAccessKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+Token: FwoGZXIvYXdzEABCDEF...(비밀 자격 증명)
+=> 이 키로 서버의 모든 클라우드 자원에 접근 가능!`,
+    secret: true
+  },
+  "localhost": {
+    label: "내부 관리자 패널 🔒",
+    body: `[ADMIN PANEL - 내부 전용]
+DB 비밀번호: root / Prod_DB_P@ss
+접속 가능한 학생 개인정보: 1,842건`,
+    secret: true
+  },
+  "127.0.0.1": {
+    label: "내부 서비스 🔒",
+    body: `[내부 전용 서비스] 외부에서 보이면 안 되는 페이지입니다.`,
+    secret: true
+  }
+};
+
+function hostOf(url) {
+  try { return new URL(url).hostname; }
+  catch { return null; }
+}
+
+function isPrivate(host) {
+  if (!host) return false;
+  return (
+    host === "localhost" ||
+    host === "127.0.0.1" ||
+    host === "169.254.169.254" ||
+    /^10\./.test(host) ||
+    /^192\.168\./.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host)
+  );
+}
+
+function fetchUrl() {
+  const url = document.getElementById("ssrf-url").value.trim();
+  const host = hostOf(url);
+  const out = document.getElementById("ssrf-result");
+  const bar = document.getElementById("server-url");
+  const mode = currentMode();
+  bar.textContent = "GET " + url;
+
+  if (!host) {
+    out.innerHTML = '<span class="bad">❌ 올바른 URL 형식이 아닙니다.</span>';
+    return;
+  }
+
+  // 방어 모드: 내부 주소 차단
+  if (mode === "safe" && isPrivate(host)) {
+    out.innerHTML = `<span class="ok">🛡️ 차단됨 — 내부/사설 주소(<code class="inline">${escapeHtml(host)}</code>)로의 요청이 거부되었습니다.</span>`;
+    return;
+  }
+
+  // 내부 가상 사이트 접근
+  if (MOCK_NET[host]) {
+    const site = MOCK_NET[host];
+    out.innerHTML =
+      `<div class="bad">⚠️ ${site.label} 응답:</div>` +
+      `<pre style="margin-top:8px">${escapeHtml(site.body)}</pre>`;
+    if (site.secret && mode === "vuln") {
+      document.getElementById("flag-box").style.display = "block";
+    }
+    return;
+  }
+
+  // 외부 정상 주소
+  out.innerHTML = `<span class="ok">✅ 외부 이미지 로드 성공:</span> <span class="hint">[${escapeHtml(host)} 의 이미지 미리보기]</span>`;
+}
+
+setupModeSwitch(() => {
+  document.getElementById("ssrf-result").innerHTML = '<span class="hint">서버가 가져온 응답이 여기 표시됩니다.</span>';
+  document.getElementById("server-url").textContent = "server-internal-network";
+});
+</script>
+</body>
+</html>

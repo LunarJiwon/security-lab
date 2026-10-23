@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04. CSRF 실습 · 웹 해킹 체험 실습실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> CSRF</div>
+    <a class="nav-back" href="../index.html">← 실습실로</a>
+  </div>
+
+  <div class="hero">
+    <span class="badge">실습 04 · 난이도 ★★★</span>
+    <h1>CSRF <span class="grad">나도 모르게 송금</span></h1>
+    <p>은행에 로그인한 상태에서, 공격자가 보낸 <b>이상한 링크나 페이지</b>를 열면,
+       내 브라우저가 <b>자동으로 은행에 송금 요청</b>을 보내요. 브라우저는 "로그인된 사용자의 요청"이라
+       믿고 실행해버립니다. 내가 누른 적도 없는데 말이죠.</p>
+  </div>
+
+  <!-- 1단계: 은행 로그인 -->
+  <div class="card">
+    <div class="section-label">① 모의 사이트 · "안전은행"</div>
+    <h2>🏦 내 계좌</h2>
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="dots"><span style="background:#f87171"></span><span style="background:#fbbf24"></span><span style="background:#4ade80"></span></div>
+        <div class="url">🔒 safe-bank.com/account</div>
+      </div>
+      <div class="browser-body">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <div>
+            <div style="color:var(--muted); font-size:0.85rem">홍길동님 · 로그인됨 ✅</div>
+            <div style="font-size:1.8rem; font-weight:800; margin-top:4px">잔액 <span id="balance">1,000,000</span>원</div>
+          </div>
+        </div>
+        <div class="section-label" style="margin-top:14px">정상 송금</div>
+        <label for="to">받는 사람</label>
+        <input type="text" id="to" value="친구" style="margin-bottom:0">
+        <label for="amt">금액</label>
+        <input type="text" id="amt" value="10000">
+        <button class="btn" onclick="transfer('친구', +document.getElementById('amt').value, true)">송금</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2단계: 공격 페이지 -->
+  <div class="card">
+    <div class="section-label">② 공격자가 보낸 페이지 · "무료 기프티콘 이벤트!!"</div>
+    <h2>🎁 수상한 이벤트 페이지</h2>
+
+    <div class="mode-switch">
+      <button class="active vuln" data-mode="vuln">🔓 취약한 은행</button>
+      <button class="safe" data-mode="safe">🔒 방어된 은행</button>
+    </div>
+
+    <div class="state-banner vuln" data-mode-banner="vuln">
+      🔓 은행이 <b>CSRF 토큰 없이</b> 요청을 그대로 받습니다.
+    </div>
+    <div class="state-banner safe" data-mode-banner="safe" style="display:none">
+      🔒 은행이 <b>비밀 토큰(CSRF Token)</b>이 없는 요청을 거부합니다.
+    </div>
+
+    <div class="browser-frame">
+      <div class="browser-bar">
+        <div class="dots"><span style="background:#f87171"></span><span style="background:#fbbf24"></span><span style="background:#4ade80"></span></div>
+        <div class="url">😈 free-gift-event.xyz</div>
+      </div>
+      <div class="browser-body">
+        <p style="margin-top:0">🎉 <b>축하합니다!</b> 아래 버튼을 누르면 스타벅스 기프티콘을 드려요!</p>
+        <button class="btn danger" onclick="evilClick()">🎁 기프티콘 받기</button>
+        <p class="hint" style="font-size:0.82rem; margin-top:10px">
+          (이 버튼은 사실 숨겨진 송금 요청을 은행에 몰래 보냅니다)
+        </p>
+      </div>
+    </div>
+
+    <div class="output" id="csrf-log" style="margin-top:16px">
+      <span class="hint">공격 로그가 여기에 표시됩니다.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 공격 미션</h2>
+    <ul class="steps">
+      <li><b>취약한 은행</b> 모드에서 위 "🎁 기프티콘 받기" 버튼을 누르세요.</li>
+      <li>이벤트 페이지일 뿐인데 <b>내 은행 잔액이 줄어드는</b> 걸 확인하세요.</li>
+      <li><b>방어된 은행</b> 모드로 바꾸고 다시 눌러 — 이번엔 <b>차단</b>됩니다.</li>
+    </ul>
+    <div class="note warn">
+      <b>원리</b> — 공격 페이지에 숨겨진 폼이 <code class="inline">safe-bank.com</code>으로 송금 요청을 보내요.
+      내 브라우저는 은행 쿠키를 자동으로 함께 보내니까, 은행은 <b>"로그인한 홍길동의 정상 요청"</b>으로 착각합니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔍 무슨 차이일까?</h2>
+    <div class="section-label">🔓 취약한 코드 — 쿠키만 확인</div>
+    <pre><code class="tok-com"># 로그인 쿠키만 있으면 누가 보낸 요청인지 안 따짐</code>
+@app.post("/transfer")
+<span class="tok-key">def</span> transfer(to, amount):
+    user = get_user_from_cookie()   <code class="tok-com"># 쿠키는 자동 전송됨!</code>
+    do_transfer(user, to, amount)</pre>
+
+    <div class="section-label" style="margin-top:16px">🔒 방어된 코드 — CSRF 토큰 확인</div>
+    <pre><code class="tok-com"># 진짜 은행 페이지에서만 아는 비밀 토큰을 함께 요구</code>
+@app.post("/transfer")
+<span class="tok-key">def</span> transfer(to, amount, csrf_token):
+    <span class="tok-key">if</span> csrf_token != session.csrf_token:
+        <span class="tok-key">raise</span> Error(<span class="tok-str">"위조된 요청!"</span>)   <code class="tok-com"># 공격 페이지는 이 토큰을 모름</code>
+    do_transfer(user, to, amount)</pre>
+
+    <div class="note success">
+      <b>핵심 방어법</b><br>
+      ① <b>CSRF 토큰</b> — 폼마다 예측 불가능한 비밀값을 넣고 검증<br>
+      ② <b>SameSite 쿠키</b> 설정 (다른 사이트에서 온 요청엔 쿠키 미전송)<br>
+      ③ 중요한 작업은 <b>재인증</b>(비밀번호 재입력, OTP) 요구
+    </div>
+  </div>
+
+  <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
+    <h2>🏁 플래그 획득!</h2>
+    <p>피해자가 누른 적도 없는 송금을 성공시켰습니다!</p>
+    <p><span class="flag">FLAG{c5rf_1_d1dnt_cl1ck_th4t}</span></p>
+  </div>
+
+  <footer>실습 04 / 04 · <a href="../index.html">🏠 실습실로 돌아가기</a></footer>
+</div>
+
+<script src="../assets/common.js"></script>
+<script>
+let balance = 1000000;
+// 진짜 은행 페이지만 아는 비밀 토큰 (공격 페이지는 이 값을 알 수 없음)
+const REAL_CSRF_TOKEN = "a9f3-" + Math.random().toString(36).slice(2, 10);
+
+function updateBalance() {
+  document.getElementById("balance").textContent = balance.toLocaleString();
+}
+
+function log(html) {
+  document.getElementById("csrf-log").innerHTML = html;
+}
+
+// 은행의 송금 처리. fromRealPage=true 면 정상 페이지에서 토큰과 함께 온 요청.
+function transfer(to, amount, fromRealPage) {
+  const mode = currentMode();
+  if (!amount || amount <= 0) { log('<span class="bad">금액이 올바르지 않습니다.</span>'); return false; }
+
+  // 방어 모드: 정상 페이지(토큰 보유)가 아닌 요청은 거부
+  if (mode === "safe" && !fromRealPage) {
+    log('<span class="ok">🛡️ 은행이 요청을 <b>거부</b>했습니다 — CSRF 토큰이 없거나 올바르지 않음.<br>' +
+        '공격 페이지는 비밀 토큰을 모르기 때문에 송금이 막혔어요.</span>');
+    return false;
+  }
+
+  if (amount > balance) { log('<span class="bad">잔액 부족.</span>'); return false; }
+  balance -= amount;
+  updateBalance();
+
+  if (fromRealPage) {
+    log(`<span class="ok">✅ 정상 송금 완료 — ${escapeHtml(to)}님에게 ${amount.toLocaleString()}원.</span>`);
+  } else {
+    log(`<span class="bad">💸 [공격 성공] 피해자 몰래 <b>해커</b>에게 ${amount.toLocaleString()}원이 송금됨!</span>`);
+    document.getElementById("flag-box").style.display = "block";
+  }
+  return true;
+}
+
+// 공격 페이지의 버튼: 숨겨진 폼이 은행으로 송금 요청을 보냄 (토큰 없이!)
+function evilClick() {
+  log('<span class="hint">free-gift-event.xyz 가 safe-bank.com/transfer 로 숨은 요청 전송 중...</span>');
+  setTimeout(() => {
+    // 공격자는 받는사람=해커, 금액=50만원으로 고정. 토큰 없음(fromRealPage=false)
+    transfer("해커", 500000, false);
+  }, 600);
+}
+
+setupModeSwitch(() => {
+  log('<span class="hint">공격 로그가 여기에 표시됩니다.</span>');
+});
+updateBalance();
+</script>
+</body>
+</html>

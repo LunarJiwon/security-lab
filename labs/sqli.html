@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02. SQL 인젝션 실습 · 웹 해킹 체험 실습실</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> SQL INJECTION</div>
+    <a class="nav-back" href="../index.html">← 실습실로</a>
+  </div>
+
+  <div class="hero">
+    <span class="badge">실습 02 · 난이도 ★★☆</span>
+    <h1>SQL 인젝션 <span class="grad">비밀번호 없이 로그인</span></h1>
+    <p>로그인할 때 서버는 "이 아이디와 비밀번호가 맞는 사람 있어?"라고 데이터베이스에 물어봐요.
+       그 질문(SQL 문장)에 <b>내 입력이 그대로 끼워 넣어지면</b>, 질문 자체를 조작해서
+       비밀번호를 몰라도 통과할 수 있습니다.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-label">모의 사이트 · "학교 포털 로그인"</div>
+    <h2>🔐 로그인</h2>
+
+    <div class="mode-switch">
+      <button class="active vuln" data-mode="vuln">🔓 취약한 버전</button>
+      <button class="safe" data-mode="safe">🔒 방어된 버전</button>
+    </div>
+
+    <div class="state-banner vuln" data-mode-banner="vuln">
+      🔓 입력값을 <b>SQL 문장에 그대로 이어붙입니다.</b>
+    </div>
+    <div class="state-banner safe" data-mode-banner="safe" style="display:none">
+      🔒 <b>파라미터 바인딩(?)</b>으로 입력을 데이터가 아닌 값으로만 처리합니다.
+    </div>
+
+    <label for="login-id">아이디</label>
+    <input type="text" id="login-id" placeholder="admin" value="admin">
+    <label for="login-pw">비밀번호</label>
+    <input type="text" id="login-pw" placeholder="비밀번호 (모름!)" value="">
+    <button class="btn" onclick="doLogin()">로그인</button>
+
+    <div class="section-label" style="margin-top:20px">💬 서버가 실행하는 SQL</div>
+    <pre id="sql-preview"><code class="tok-com">여기에 실제 실행되는 SQL이 표시됩니다</code></pre>
+
+    <div class="output" id="login-result">
+      <span class="hint">로그인을 시도해보세요.</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🎯 공격 미션</h2>
+    <p>비밀번호를 몰라도 로그인하기. <b>비밀번호 칸</b>에 아래를 넣어보세요.</p>
+    <pre><code class="tok-attack">' OR '1'='1</code></pre>
+    <p style="color:var(--muted)">또는 아이디 칸에 <code class="inline tok-attack">admin' --</code> 를 넣으면
+       비밀번호 확인 부분을 통째로 <b>주석 처리</b>해버립니다.</p>
+    <div class="note warn">
+      <b>원리</b> — 원래 질문은 "아이디가 admin이고 비번이 XXX인 사람?"인데,
+      <code class="inline">' OR '1'='1</code> 을 넣으면 "...또는 1=1인 사람?"으로 바뀌어요.
+      1은 항상 1이니까 <b>모든 사람이 조건에 맞아</b> 로그인이 통과됩니다.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔍 무슨 차이일까?</h2>
+    <div class="section-label">🔓 취약한 코드 — 문자열 이어붙이기</div>
+    <pre><code class="tok-com"># 입력이 SQL 문장 구조를 바꿀 수 있음</code>
+sql = <span class="tok-str">"SELECT * FROM users WHERE id='"</span> + id + <span class="tok-str">"' AND pw='"</span> + pw + <span class="tok-str">"'"</span></pre>
+
+    <div class="section-label" style="margin-top:16px">🔒 방어된 코드 — 파라미터 바인딩</div>
+    <pre><code class="tok-com"># 입력은 무조건 "값"으로만 취급됨 (구조 변경 불가)</code>
+sql = <span class="tok-str">"SELECT * FROM users WHERE id=? AND pw=?"</span>
+cursor.execute(sql, (id, pw))  <code class="tok-com"># ← ?에 안전하게 끼워짐</code></pre>
+
+    <div class="note success">
+      <b>핵심 방어법</b><br>
+      ① <b>Prepared Statement / 파라미터 바인딩</b> 사용 (가장 중요!)<br>
+      ② ORM 사용 (장고 ORM, SQLAlchemy 등)<br>
+      ③ 입력값 검증 + 최소 권한 DB 계정
+    </div>
+  </div>
+
+  <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
+    <h2>🏁 플래그 획득!</h2>
+    <p>비밀번호 없이 admin 계정에 로그인했습니다!</p>
+    <p><span class="flag">FLAG{5ql_1nj3ct10n_0R_1=1}</span></p>
+  </div>
+
+  <footer>실습 02 / 04 · <a href="ssrf.html">다음: SSRF →</a></footer>
+</div>
+
+<script src="../assets/common.js"></script>
+<script>
+// 모의 DB: 실제 비밀번호는 아무도 모름
+const USERS = [
+  { id: "admin",  pw: "S3cr3t!2024#xZ", role: "관리자" },
+  { id: "student", pw: "pass1234",       role: "학생" }
+];
+
+// 아주 단순한 SQL 흉내 엔진.
+// 취약 모드: 입력을 문자열로 이어붙인 뒤, OR '1'='1' 같은 항상 참 조건과
+//            주석(--)을 해석해서 "실제 SQLi가 통하는 것처럼" 동작시킨다.
+function vulnerableQuery(id, pw) {
+  const sql = `SELECT * FROM users WHERE id='${id}' AND pw='${pw}'`;
+  showSql(sql);
+
+  // -- 주석 처리: -- 이후는 무시
+  let effective = sql.split("--")[0];
+
+  // 'OR '1'='1' 류의 항상 참 패턴 감지
+  const alwaysTrue = /'\s*or\s*'?1'?\s*=\s*'?1/i.test(effective) ||
+                     /'\s*or\s*1\s*=\s*1/i.test(effective) ||
+                     /'\s*or\s*'[^']*'\s*=\s*'[^']*'/i.test(effective);
+
+  // id' -- 패턴: 비밀번호 검사 무력화
+  const commentedOut = /--/.test(sql);
+
+  if (alwaysTrue) {
+    // 모든 행이 매칭 → 첫 행(admin) 반환
+    return { ok: true, user: USERS[0], reason: "OR 조건이 항상 참이 되어 모든 행이 통과됨" };
+  }
+  if (commentedOut) {
+    // id 부분만 보고 매칭 (비번 검사 생략)
+    const cleanId = id.replace(/'.*/, "");
+    const u = USERS.find((u) => u.id === cleanId);
+    if (u) return { ok: true, user: u, reason: "'--' 로 비밀번호 검사 부분이 주석 처리됨" };
+  }
+  // 정상 인증
+  const u = USERS.find((u) => u.id === id && u.pw === pw);
+  return u ? { ok: true, user: u, reason: "정상 로그인" } : { ok: false };
+}
+
+// 방어 모드: 입력은 100% 데이터. 문자 그대로 비교.
+function safeQuery(id, pw) {
+  showSql(`SELECT * FROM users WHERE id=? AND pw=?   -- params: ['${id}', '${pw}']`);
+  const u = USERS.find((u) => u.id === id && u.pw === pw);
+  return u ? { ok: true, user: u, reason: "정상 로그인" } : { ok: false };
+}
+
+function showSql(sql) {
+  // 공격 문자열 강조
+  const esc = escapeHtml(sql)
+    .replace(/(&#39;\s*OR\s*&#39;?1&#39;?\s*=\s*&#39;?1[^ ]*|--.*|admin&#39;)/gi,
+             '<span class="tok-attack">$1</span>');
+  document.getElementById("sql-preview").innerHTML = esc;
+}
+
+function doLogin() {
+  const id = document.getElementById("login-id").value;
+  const pw = document.getElementById("login-pw").value;
+  const mode = currentMode();
+  const res = mode === "vuln" ? vulnerableQuery(id, pw) : safeQuery(id, pw);
+  const out = document.getElementById("login-result");
+
+  if (res.ok) {
+    const bypassed = res.reason !== "정상 로그인";
+    out.innerHTML =
+      `<div class="ok">✅ 로그인 성공 — <b>${res.user.id}</b> (${res.user.role})</div>` +
+      `<div class="hint" style="margin-top:6px">이유: ${res.reason}</div>`;
+    if (bypassed && mode === "vuln") {
+      document.getElementById("flag-box").style.display = "block";
+    }
+  } else {
+    out.innerHTML = '<div class="bad">❌ 아이디 또는 비밀번호가 틀렸습니다.</div>';
+  }
+}
+
+setupModeSwitch(() => {
+  document.getElementById("login-result").innerHTML = '<span class="hint">로그인을 시도해보세요.</span>';
+  document.getElementById("sql-preview").innerHTML = '<code class="tok-com">여기에 실제 실행되는 SQL이 표시됩니다</code>';
+});
+</script>
+</body>
+</html>

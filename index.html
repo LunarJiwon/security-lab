@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>웹 해킹 체험 실습실 · 보안 특강</title>
+<meta name="description" content="중고등학생을 위한 웹 취약점 체험 실습 — XSS, SQL 인젝션, SSRF, CSRF를 직접 공격하고 방어까지 배워봅니다.">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> 웹 해킹 체험 실습실</div>
+    <div class="nav-back">보안 특강 · 중·고등학생용</div>
+  </div>
+
+  <div class="hero">
+    <span class="badge">🛡️ 직접 공격하고, 직접 막아보는 실습</span>
+    <h1>해커처럼 공격하고<br><span class="grad">개발자처럼 방어하기</span></h1>
+    <p>웹 사이트에서 가장 많이 발생하는 4가지 취약점을 직접 체험합니다.
+       각 실습은 <b style="color:var(--danger)">취약한 코드로 공격을 성공</b>시킨 뒤,
+       <b style="color:var(--safe)">방어 코드로 똑같은 공격을 막는</b> 순서로 진행돼요.</p>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ <b>안내</b> — 이 실습실은 교육용으로 만들어진 <b>가짜 사이트</b>입니다. 모든 "데이터베이스"와 "서버"는
+    여러분 브라우저 안에서만 돌아가는 흉내(시뮬레이션)예요. 여기서 배운 기술은 <b>허락받지 않은 실제 사이트에 절대 사용하면 안 됩니다.</b>
+    (정보통신망법 위반 — 처벌 대상)
+  </div>
+
+  <div class="grid">
+    <a class="lab-card" href="labs/xss.html">
+      <span class="num">01</span>
+      <span class="tag">XSS</span>
+      <h3>크로스 사이트 스크립팅</h3>
+      <p>남의 글에 몰래 심어둔 코드가 내 브라우저에서 실행된다?</p>
+    </a>
+    <a class="lab-card" href="labs/sqli.html">
+      <span class="num">02</span>
+      <span class="tag">SQL INJECTION</span>
+      <h3>SQL 인젝션</h3>
+      <p>비밀번호를 몰라도 로그인에 성공하는 마법의 주문.</p>
+    </a>
+    <a class="lab-card" href="labs/ssrf.html">
+      <span class="num">03</span>
+      <span class="tag">SSRF</span>
+      <h3>서버 측 요청 위조</h3>
+      <p>서버를 속여 내부 비밀 정보를 대신 훔쳐오게 만들기.</p>
+    </a>
+    <a class="lab-card" href="labs/csrf.html">
+      <span class="num">04</span>
+      <span class="tag">CSRF</span>
+      <h3>크로스 사이트 요청 위조</h3>
+      <p>링크 한 번 눌렀을 뿐인데 내 돈이 송금됐다?</p>
+    </a>
+  </div>
+
+  <div class="card" style="margin-top:36px">
+    <h2>🎯 오늘의 미션</h2>
+    <p style="color:var(--muted)">각 실습에는 숨겨진 <b class="flag">FLAG{...}</b> 가 있어요.
+       공격에 성공하면 플래그가 나타납니다. 4개 다 찾으면 오늘의 화이트해커 인증!</p>
+    <ul class="steps">
+      <li><b>공격 모드</b>에서 설명대로 입력해 공격을 성공시키세요.</li>
+      <li>플래그가 뜨면 <b>어떻게 뚫렸는지</b> 코드를 함께 살펴봅니다.</li>
+      <li><b>방어 모드</b>로 바꾸고 같은 공격을 다시 시도해 — 이번엔 막히는 걸 확인하세요.</li>
+    </ul>
+  </div>
+
+  <footer>
+    보안 특강 실습 자료 · <span data-year></span> · 교육 목적으로 제작됨
+  </footer>
+</div>
+<script src="assets/common.js"></script>
+</body>
+</html>

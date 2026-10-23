@@ -1,0 +1,5 @@
+# 렌더 산출물
+slide-*.jpg
+*.pdf
+.DS_Store
+node_modules/

@@ -94,7 +94,8 @@ host = urlparse(user_url).hostname
   <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
     <h2>🏁 플래그 획득!</h2>
     <p>서버를 속여 내부 비밀 자격 증명을 빼냈습니다!</p>
-    <p><span class="flag">FLAG{55rf_m3tadata_1s_m1ne}</span></p>
+    <p><span class="flag" data-f="RkxBR3s1NXJmX20zdGFkYXRhXzFzX20xbmV9"></span></p>
+    <p class="hint">👉 이 플래그를 복사해 <a href="../ctf.html">CTF 페이지</a>에 제출하세요!</p>
   </div>
 
   <footer>실습 03 / 04 · <a href="csrf.html">다음: CSRF →</a></footer>
@@ -169,7 +170,7 @@ function fetchUrl() {
       `<div class="bad">⚠️ ${site.label} 응답:</div>` +
       `<pre style="margin-top:8px">${escapeHtml(site.body)}</pre>`;
     if (site.secret && mode === "vuln") {
-      document.getElementById("flag-box").style.display = "block";
+      revealFlag();
     }
     return;
   }

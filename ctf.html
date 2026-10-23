@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>미니 CTF · 웹 해킹 체험 실습실</title>
+<meta name="description" content="직접 공격해서 찾은 FLAG를 제출하고 점수와 시간을 겨루는 미니 CTF.">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="assets/style.css">
+<!--
+  🔎 여기까지 소스를 뒤져본 당신, 정찰(recon)의 기본기가 있군요!
+  보너스 플래그가 Base64로 숨겨져 있습니다. 디코딩해서 CTF에 제출하세요:
+  RkxBR3t2MTN3X3MwdXJjM19yM2Mwbn0=
+  (힌트: atob("...") 를 콘솔에 쳐보거나, base64 디코더를 쓰세요)
+-->
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> 미니 CTF</div>
+    <a class="nav-back" href="index.html">← 실습실로</a>
+  </div>
+
+  <div class="hero">
+    <span class="badge">🚩 CAPTURE THE FLAG</span>
+    <h1>찾은 <span class="grad">FLAG</span>를 제출하라</h1>
+    <p>각 실습을 직접 공격해 숨겨진 <code class="inline">FLAG{...}</code> 를 알아내고, 아래에 제출하세요.
+       맞히면 점수가 올라갑니다. <b>6개 전부</b> 찾으면 오늘의 화이트해커 인증! ⏱️ 시간도 기록돼요.</p>
+  </div>
+
+  <!-- 통계 -->
+  <div class="ctf-stats">
+    <div class="ctf-stat"><div class="num" id="stat-score">0</div><div class="lbl">점수 / <span id="stat-total">0</span></div></div>
+    <div class="ctf-stat"><div class="num" id="stat-solved">0 / 0</div><div class="lbl">해결한 문제</div></div>
+    <div class="ctf-stat timer"><div class="num" id="stat-timer">00:00</div><div class="lbl">경과 시간</div></div>
+  </div>
+  <div class="progress-track"><div class="bar" id="progress-bar"></div></div>
+
+  <!-- 제출 -->
+  <div class="card">
+    <h2>🚩 플래그 제출</h2>
+    <div class="submit-box">
+      <input type="text" id="flag-input" placeholder="FLAG{...} 전체를 붙여넣으세요" autocomplete="off" spellcheck="false">
+      <button class="btn" id="submit-btn">제출</button>
+    </div>
+    <div class="submit-msg hint" id="submit-msg"></div>
+  </div>
+
+  <!-- 완료 인증 (숨김) -->
+  <div class="cert" id="cert" style="display:none">
+    <h2>🏆 오늘의 화이트해커 인증!</h2>
+    <p>6개의 플래그를 모두 찾았습니다. 공격을 이해하고, 방어까지 배운 당신은 진짜 화이트해커예요.</p>
+    <p class="big">⏱️ 완료 시간: <span id="cert-time">--:--</span></p>
+  </div>
+
+  <!-- 문제 보드 -->
+  <div class="card">
+    <h2>🎯 챌린지 (6)</h2>
+    <p style="color:var(--muted); font-size:0.9rem; margin-top:-6px">
+      기본 4개는 각 실습 페이지에서 공격에 성공하면 플래그가 나와요. 보너스 2개는 개발자도구(F12)로 직접 찾아야 합니다.
+    </p>
+    <div class="ctf-board" id="board"></div>
+  </div>
+
+  <div style="text-align:center; margin-top:10px">
+    <button class="btn ghost" onclick="resetCtf()">🔄 처음부터 다시 (기록 초기화)</button>
+  </div>
+
+  <div class="disclaimer" style="margin-top:28px">
+    ⚠️ 점수와 기록은 <b>이 브라우저에만</b> 저장됩니다(서버 없음). 다른 기기·브라우저에서는 따로 집계돼요.
+    교실에서는 "먼저 6개 다 찾는 사람" 또는 "가장 빠른 완료 시간"으로 순위를 매기면 됩니다.
+  </div>
+
+  <footer>미니 CTF · 웹 해킹 체험 실습실 · <span data-year></span></footer>
+</div>
+<script src="assets/common.js"></script>
+<script src="assets/ctf.js"></script>
+</body>
+</html>

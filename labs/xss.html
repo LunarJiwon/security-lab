@@ -89,7 +89,8 @@ box.<span class="tok-key">textContent</span> = name + <span class="tok-str">": "
   <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
     <h2>🏁 플래그 획득!</h2>
     <p>XSS 공격에 성공했어요. 스크립트가 실제로 실행된 걸 확인했습니다.</p>
-    <p><span class="flag">FLAG{XSS_c0de_1n_y0ur_br0wser}</span></p>
+    <p><span class="flag" data-f="RkxBR3tYU1NfYzBkZV8xbl95MHVyX2JyMHdzZXJ9"></span></p>
+    <p class="hint">👉 이 플래그를 복사해 <a href="../ctf.html">CTF 페이지</a>에 제출하세요!</p>
   </div>
 
   <footer>실습 01 / 04 · <a href="sqli.html">다음: SQL 인젝션 →</a></footer>
@@ -101,7 +102,7 @@ let posts = [];
 
 // 공격 성공 감지: 전역 함수로 플래그 노출
 window.__xssTriggered = function () {
-  document.getElementById("flag-box").style.display = "block";
+  revealFlag();
 };
 
 function render() {

@@ -32,6 +32,18 @@ function currentMode() {
   return active ? active.dataset.mode : "vuln";
 }
 
+// 공격 성공 시 플래그 공개 (평문은 소스에 없음 — data-f에 base64로 숨김)
+function revealFlag() {
+  const box = document.getElementById("flag-box");
+  if (!box) return;
+  box.style.display = "block";
+  const el = box.querySelector(".flag[data-f]");
+  if (el && !el.textContent) {
+    try { el.textContent = atob(el.dataset.f); } catch (e) {}
+  }
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
 // 현재 연도 푸터
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("[data-year]").forEach((el) => {

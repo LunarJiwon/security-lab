@@ -126,7 +126,8 @@
   <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
     <h2>🏁 플래그 획득!</h2>
     <p>피해자가 누른 적도 없는 송금을 성공시켰습니다!</p>
-    <p><span class="flag">FLAG{c5rf_1_d1dnt_cl1ck_th4t}</span></p>
+    <p><span class="flag" data-f="RkxBR3tjNXJmXzFfZDFkbnRfY2wxY2tfdGg0dH0="></span></p>
+    <p class="hint">👉 이 플래그를 복사해 <a href="../ctf.html">CTF 페이지</a>에 제출하세요!</p>
   </div>
 
   <footer>실습 04 / 04 · <a href="../index.html">🏠 실습실로 돌아가기</a></footer>
@@ -166,7 +167,7 @@ function transfer(to, amount, fromRealPage) {
     log(`<span class="ok">✅ 정상 송금 완료 — ${escapeHtml(to)}님에게 ${amount.toLocaleString()}원.</span>`);
   } else {
     log(`<span class="bad">💸 [공격 성공] 피해자 몰래 <b>해커</b>에게 ${amount.toLocaleString()}원이 송금됨!</span>`);
-    document.getElementById("flag-box").style.display = "block";
+    revealFlag();
   }
   return true;
 }

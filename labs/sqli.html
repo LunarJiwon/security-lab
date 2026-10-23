@@ -88,7 +88,8 @@ cursor.execute(sql, (id, pw))  <code class="tok-com"># ← ?에 안전하게 끼
   <div id="flag-box" class="card" style="display:none; border-color:var(--safe)">
     <h2>🏁 플래그 획득!</h2>
     <p>비밀번호 없이 admin 계정에 로그인했습니다!</p>
-    <p><span class="flag">FLAG{5ql_1nj3ct10n_0R_1=1}</span></p>
+    <p><span class="flag" data-f="RkxBR3s1cWxfMW5qM2N0MTBuXzBSXzE9MX0="></span></p>
+    <p class="hint">👉 이 플래그를 복사해 <a href="../ctf.html">CTF 페이지</a>에 제출하세요!</p>
   </div>
 
   <footer>실습 02 / 04 · <a href="ssrf.html">다음: SSRF →</a></footer>
@@ -163,7 +164,7 @@ function doLogin() {
       `<div class="ok">✅ 로그인 성공 — <b>${res.user.id}</b> (${res.user.role})</div>` +
       `<div class="hint" style="margin-top:6px">이유: ${res.reason}</div>`;
     if (bypassed && mode === "vuln") {
-      document.getElementById("flag-box").style.display = "block";
+      revealFlag();
     }
   } else {
     out.innerHTML = '<div class="bad">❌ 아이디 또는 비밀번호가 틀렸습니다.</div>';

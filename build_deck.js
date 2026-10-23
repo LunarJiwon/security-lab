@@ -262,9 +262,35 @@ s.addText("🧪 실습 사이트를 미리 열어두세요", { x: 0.9, y: 5.45, 
 s.addText([
   { text: "강사가 알려주는 주소로 접속 → 각 실습마다 ", options: { color: TEXT } },
   { text: "FLAG{...}", options: { bold: true, color: SAFE, fontFace: MONO } },
-  { text: " 를 찾습니다. 4개 모두 찾으면 오늘의 화이트해커 인증!", options: { color: TEXT } },
+  { text: " 를 찾아 CTF 페이지에 제출합니다. 6개 모두 찾으면 오늘의 화이트해커 인증!", options: { color: TEXT } },
 ], { x: 0.9, y: 5.9, w: 11.5, h: 0.5, fontSize: 14, fontFace: "Calibri", isTextBox: true, margin: 0 });
 s.addNotes("[~3분] 수업의 리듬을 미리 알려주면 학생들이 따라오기 쉽다. 지금 실습 사이트 접속을 다 같이 해두면 좋다.");
+
+// 3-B. 미니 CTF 안내
+s = pres.addSlide({ masterName: "DARK" });
+head(s, "수업 진행 · CTF", TEAL, "오늘의 미션 — 미니 CTF 🚩");
+subtitle(s, "공격에 성공해 찾은 FLAG를 'CTF 페이지'에 제출하세요. 점수와 시간이 기록됩니다.", 1.65);
+const ctfChals = [
+  ["XSS", "100pt", "★☆☆", TEAL], ["SQLi", "150pt", "★★☆", INDIGO],
+  ["SSRF", "200pt", "★★★", WARN], ["CSRF", "200pt", "★★★", DANGER],
+  ["보너스·소스 정찰", "120pt", "★★☆", SAFE], ["보너스·콘솔", "80pt", "★☆☆", SAFE],
+];
+ctfChals.forEach(([n, p, d, c], i) => {
+  const col = i % 3, row = Math.floor(i / 3);
+  const x = 0.6 + col * 4.1, y = 2.45 + row * 1.35;
+  card(s, x, y, 3.9, 1.15, { line: c });
+  s.addText(n, { x: x + 0.25, y: y + 0.18, w: 2.6, h: 0.5, fontSize: 15, bold: true, color: c, fontFace: "Arial", isTextBox: true, margin: 0 });
+  s.addText(p, { x: x + 2.6, y: y + 0.18, w: 1.1, h: 0.5, fontSize: 14, bold: true, color: WARN, align: "right", fontFace: MONO, isTextBox: true, margin: 0 });
+  s.addText("난이도 " + d, { x: x + 0.25, y: y + 0.65, w: 3.4, h: 0.4, fontSize: 12, color: MUTED, fontFace: "Calibri", isTextBox: true, margin: 0 });
+});
+card(s, 0.6, 5.55, 12.1, 1.0, { fill: CARD2, line: TEAL });
+s.addText([
+  { text: "기본 4문제", options: { bold: true, color: TEAL } },
+  { text: "는 실습에서 공격 성공 시 플래그가 나오고, ", options: { color: TEXT } },
+  { text: "보너스 2문제", options: { bold: true, color: SAFE } },
+  { text: "는 개발자도구(F12)로 직접 찾습니다. 먼저 6개 다 찾거나, 가장 빠른 사람이 승자!", options: { color: TEXT } },
+], { x: 0.9, y: 5.75, w: 11.5, h: 0.65, fontSize: 14, fontFace: "Calibri", valign: "middle", isTextBox: true, margin: 0 });
+s.addNotes("[~2분] CTF는 시간이 남든 모자라든 자연스럽게 흡수되는 장치. 보너스 2개(소스 정찰·콘솔)는 0-7 개발자도구 수업과 직접 연결된다. 공유 순위표는 없으니(서버 없음) '먼저 6개' 또는 '최단 시간'으로 교실에서 집계.");
 
 // =====================================================================
 // PART 0
@@ -811,7 +837,7 @@ s.addText([
 ], { x: 0.9, y: 2.55, w: 11.5, h: 1, fontSize: 15, fontFace: "Calibri", lineSpacingMultiple: 1.2, isTextBox: true, margin: 0 });
 card(s, 0.6, 3.9, 5.9, 2.5);
 s.addText("🧪 실습 사이트", { x: 0.9, y: 4.1, w: 5.3, h: 0.45, fontSize: 16, bold: true, color: TEAL, fontFace: "Arial", isTextBox: true, margin: 0 });
-s.addText("네 개 FLAG를 모두 찾았나요? 집에서도 '방어 버전'의 코드를 더 살펴보며 복습해보세요.",
+s.addText("여섯 개 FLAG를 모두 찾았나요? 집에서도 '방어 버전'의 코드를 더 살펴보며 복습해보세요.",
   { x: 0.9, y: 4.6, w: 5.3, h: 1, fontSize: 14, color: MUTED, fontFace: "Calibri", lineSpacingMultiple: 1.2, isTextBox: true, margin: 0 });
 s.addShape(pres.ShapeType.roundRect, { x: 0.9, y: 5.7, w: 5.3, h: 0.5, rectRadius: 0.1, fill: { color: BG }, line: { color: TEAL, width: 1 } });
 s.addText("[여기에 GitHub Pages 주소]", { x: 0.9, y: 5.7, w: 5.3, h: 0.5, fontSize: 13, color: TEAL, align: "center", valign: "middle", fontFace: MONO, isTextBox: true, margin: 0 });
